@@ -30,6 +30,17 @@ _load_dotenv()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # model whisper: tiny, base, small, medium, large-v3
-# "small" = bun raport viteza/acuratete pentru romana
+# "small" = bun raport viteza/acuratete pentru romana (PC)
+# "tiny"  = recomandat pe Termux/Android
 WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
 WHISPER_LANGUAGE = os.environ.get("WHISPER_LANGUAGE", "ro")
+
+# backend STT: "faster" (faster-whisper, default) sau "cpp" (whisper.cpp pe Termux/ARM)
+WHISPER_BACKEND = os.environ.get("WHISPER_BACKEND", "faster")
+
+# pentru backend "cpp": cale catre binary-ul whisper-cli si modelul ggml
+WHISPER_CPP_BIN = os.environ.get("WHISPER_CPP_BIN", "whisper-cli")
+WHISPER_CPP_MODEL = os.environ.get(
+    "WHISPER_CPP_MODEL",
+    os.path.expanduser("~/whisper.cpp/models/ggml-tiny.bin"),
+)

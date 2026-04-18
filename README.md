@@ -131,6 +131,62 @@ Pragul de detectie e configurat la `0.97` in [tello/wakeword/detector.py](tello/
 
 ---
 
+## Mobil — Termux pe Android
+
+Poti rula app-ul direct pe telefon, conectat la wifi-ul dronei. Nu ai nevoie de laptop.
+
+### Cerinte
+
+- **Termux** instalat din F-Droid sau GitHub releases (NU din Play Store, e abandonat)
+- **Termux:API** instalat din F-Droid (pentru permisiuni microfon)
+
+### Instalare
+
+```bash
+# in Termux
+pkg install git -y
+termux-setup-storage    # accepta permisiunile
+
+git clone https://github.com/bumbutudor/VoiceCommander.git
+cd VoiceCommander
+
+bash scripts/setup_termux.sh
+```
+
+Scriptul:
+- instaleaza `python`, `portaudio`, `clang`, `cmake`, etc.
+- creeaza `.venv` si instaleaza dependintele Python (fara `faster-whisper` care nu compileaza pe ARM)
+- compileaza `whisper.cpp` din sursa si descarca modelul `ggml-tiny`
+- creeaza `.env` cu `WHISPER_BACKEND=cpp`
+
+### Rulare pe telefon
+
+```bash
+# conecteaza-te la wifi-ul TELLO-XXXXXX din Settings
+source .venv/bin/activate
+termux-wake-lock                          # nu lasa telefonul sa adoarma
+python -m tello --no-ai                   # zboara
+```
+
+### Backend whisper configurabil
+
+Pe PC se foloseste `faster-whisper` (default), pe Termux `whisper.cpp` (subprocess). Configurabil prin env (vezi [.env.example](.env.example)):
+
+```
+WHISPER_BACKEND=cpp                                  # sau "faster" pe PC
+WHISPER_CPP_BIN=whisper-cli
+WHISPER_CPP_MODEL=~/whisper.cpp/models/ggml-tiny.bin
+```
+
+### Limitari Termux
+
+- Latenta: model `tiny` ~3-5s pe telefoane mid-range. Acceptabil pentru comenzi scurte.
+- Microfonul cere permisiune Termux:API la prima rulare.
+- Daca ecranul se inchide, foloseste `termux-wake-lock`.
+- Nu poti folosi internet si drona simultan (drona e singurul wifi disponibil).
+
+---
+
 ## Windows — control sistem
 
 ```bash

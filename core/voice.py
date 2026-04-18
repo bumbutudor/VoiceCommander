@@ -1,30 +1,20 @@
-"""captura audio de la microfon si transcriere cu faster-whisper"""
+"""captura audio de la microfon si transcriere cu whisper
+
+backends suportate (env WHISPER_BACKEND):
+  - "faster" (default) - faster-whisper (PC, x86_64)
+  - "cpp"              - whisper.cpp prin subprocess (Termux/Android ARM)
+"""
 
 import numpy as np
 import sounddevice as sd
-from faster_whisper import WhisperModel
 
 from core import config
+from core.whisper_backends import make_backend
 
 
 class Listener:
     def __init__(self):
-        # local_files_only: nu incearca sa contacteze HF (blocheaza fara internet,
-        # ex: cand esti conectat pe wifi-ul dronei tello)
-        try:
-            self.model = WhisperModel(
-                config.WHISPER_MODEL,
-                device="cpu",
-                compute_type="int8",
-                local_files_only=True,
-            )
-        except Exception:
-            # daca modelul nu e in cache, descarca-l (necesita internet)
-            self.model = WhisperModel(
-                config.WHISPER_MODEL,
-                device="cpu",
-                compute_type="int8",
-            )
+        self.model = make_backend()
 
         self.rate = 16000
         self.chunk_ms = 100
@@ -95,15 +85,8 @@ class Listener:
         return np.concatenate(frames)
 
     def transcribe(self, audio):
-        """transcriere audio -> text cu whisper"""
-        audio_f32 = audio.astype(np.float32).flatten() / 32768.0
-        segments, _ = self.model.transcribe(
-            audio_f32,
-            language=config.WHISPER_LANGUAGE,
-            vad_filter=True,
-            beam_size=3,
-        )
-        return " ".join(s.text for s in segments).strip().lower()
+        """transcriere audio -> text (delegat backend-ului)"""
+        return self.model.transcribe(audio)
 
     def listen(self):
         """asculta si returneaza textul transcris"""
