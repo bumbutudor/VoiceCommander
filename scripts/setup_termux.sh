@@ -8,6 +8,10 @@ echo "=== 1/6 update pachete termux ==="
 pkg update -y && pkg upgrade -y
 
 echo "=== 2/6 instalare pachete sistem ==="
+# tur-repo: termux user repository - aici sunt numpy/scipy/sklearn prebuilt
+pkg install -y tur-repo || true
+pkg update -y
+
 # NUMPY/SCIPY/SKLEARN: le luam prebuilt din termux (evitam compilarea)
 pkg install -y \
     python git rust binutils clang make cmake pkg-config \
@@ -18,7 +22,7 @@ pkg install -y \
 # scikit-learn: numele variaza intre repo-uri termux
 pkg install -y python-scikit-learn || \
     pkg install -y python-sklearn || \
-    echo "[!] nu am gasit pachet sklearn in pkg - voi incerca pip (poate esua)"
+    echo "[!] nu am gasit pachet sklearn in pkg - voi incerca pip"
 
 echo "=== 3/6 venv python (system-site-packages pentru numpy/scipy/sklearn) ==="
 if [ ! -d .venv ]; then
