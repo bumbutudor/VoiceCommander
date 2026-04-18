@@ -1,7 +1,13 @@
 """extragere features audio pentru wake word"""
 
 import numpy as np
-import librosa
+
+try:
+    import librosa
+    HAS_LIBROSA = True
+except ImportError:
+    librosa = None
+    HAS_LIBROSA = False
 
 
 SAMPLE_RATE = 16000
@@ -20,6 +26,12 @@ def extract_features(audio, sr=SAMPLE_RATE):
         audio = np.pad(audio, (0, target_len - len(audio)))
     else:
         audio = audio[:target_len]
+
+    if not HAS_LIBROSA:
+        raise RuntimeError(
+            "librosa indisponibil - modelul wake word e antrenat cu librosa MFCC. "
+            "instaleaza librosa (vezi scripts/setup_termux.sh) sau ruleaza fara wake word."
+        )
 
     mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=N_MFCC)
     delta = librosa.feature.delta(mfcc)

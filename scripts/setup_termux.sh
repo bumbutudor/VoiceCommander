@@ -8,23 +8,29 @@ echo "=== 1/6 update pachete termux ==="
 pkg update -y && pkg upgrade -y
 
 echo "=== 2/6 instalare pachete sistem ==="
+# NUMPY/SCIPY/SKLEARN: le luam prebuilt din termux (evitam compilarea)
 pkg install -y \
     python git rust binutils clang make cmake pkg-config \
     portaudio openssl libffi termux-api \
-    fftw libsndfile
+    fftw libsndfile \
+    python-numpy python-scipy
 
-echo "=== 3/6 venv python ==="
+echo "=== 3/6 venv python (system-site-packages pentru numpy/scipy) ==="
 if [ ! -d .venv ]; then
-    python -m venv .venv
+    python -m venv --system-site-packages .venv
 fi
 source .venv/bin/activate
 pip install --upgrade pip wheel setuptools
 
-echo "=== 4/6 dependinte python (fara faster-whisper) ==="
-# faster-whisper / ctranslate2 nu au wheel pe Android - sarim peste
+echo "=== 4/6 dependinte python (fara faster-whisper/numba) ==="
+# faster-whisper/ctranslate2 nu au wheel pe Android - sarim peste
+# librosa are dep numba care nu compileaza pe ARM - il instalam fara deps
 pip install \
-    numpy scipy scikit-learn sounddevice djitellopy google-genai \
-    librosa
+    scikit-learn sounddevice djitellopy google-genai
+
+# librosa dependente (fara numba/llvmlite)
+pip install audioread soundfile pooch lazy_loader joblib msgpack decorator typing_extensions
+pip install --no-deps librosa
 
 echo "=== 5/6 build whisper.cpp ==="
 if [ ! -d "$HOME/whisper.cpp" ]; then
