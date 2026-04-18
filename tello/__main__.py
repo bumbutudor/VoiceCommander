@@ -10,7 +10,16 @@ from core.runner import Runner
 from tello import config
 from tello.commands import execute, _safe_land
 from tello.interpreter import LocalInterpreter
-from tello.wakeword.detector import WakeWordDetector, MODEL_PATH
+
+# wake word e optional (lipseste sklearn/librosa pe unele platforme)
+try:
+    from tello.wakeword.detector import WakeWordDetector, MODEL_PATH
+    HAS_WAKEWORD = True
+except ImportError as _e:
+    WakeWordDetector = None
+    MODEL_PATH = "data/wakeword_model.pkl"
+    HAS_WAKEWORD = False
+    _WAKEWORD_ERR = str(_e)
 
 
 # mapare taste -> (predicat, obiect)
@@ -84,7 +93,9 @@ def main():
 
     # incarca wake word detector daca exista modelul antrenat
     wake_word = None
-    if os.path.exists(MODEL_PATH):
+    if not HAS_WAKEWORD:
+        print(f"[wake word] dependente lipsa ({_WAKEWORD_ERR}) - folosesc trigger text")
+    elif os.path.exists(MODEL_PATH):
         try:
             wake_word = WakeWordDetector()
             print(f"[wake word] activ (prag={wake_word.threshold})")

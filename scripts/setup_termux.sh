@@ -15,7 +15,12 @@ pkg install -y \
     fftw libsndfile \
     python-numpy python-scipy
 
-echo "=== 3/6 venv python (system-site-packages pentru numpy/scipy) ==="
+# scikit-learn: numele variaza intre repo-uri termux
+pkg install -y python-scikit-learn || \
+    pkg install -y python-sklearn || \
+    echo "[!] nu am gasit pachet sklearn in pkg - voi incerca pip (poate esua)"
+
+echo "=== 3/6 venv python (system-site-packages pentru numpy/scipy/sklearn) ==="
 if [ ! -d .venv ]; then
     python -m venv --system-site-packages .venv
 fi
@@ -24,13 +29,21 @@ pip install --upgrade pip wheel setuptools
 
 echo "=== 4/6 dependinte python (fara faster-whisper/numba) ==="
 # faster-whisper/ctranslate2 nu au wheel pe Android - sarim peste
-# librosa are dep numba care nu compileaza pe ARM - il instalam fara deps
-pip install \
-    scikit-learn sounddevice djitellopy google-genai
+# librosa/numba nu compileaza pe ARM - instalam librosa fara deps
+
+# daca sklearn nu a venit prin pkg, incearca pip --no-build-isolation
+# (foloseste numpy/scipy din system-site-packages, evita rebuild scipy)
+if ! python -c "import sklearn" 2>/dev/null; then
+    echo "[!] sklearn lipseste - incerc pip --no-build-isolation"
+    pip install --no-build-isolation scikit-learn || \
+        echo "[!] sklearn esuat - wake word va fi indisponibil (app merge tot)"
+fi
+
+pip install sounddevice djitellopy google-genai
 
 # librosa dependente (fara numba/llvmlite)
-pip install audioread soundfile pooch lazy_loader joblib msgpack decorator typing_extensions
-pip install --no-deps librosa
+pip install audioread soundfile pooch lazy_loader joblib msgpack decorator typing_extensions || true
+pip install --no-deps librosa || echo "[!] librosa esuat - wake word indisponibil"
 
 echo "=== 5/6 build whisper.cpp ==="
 if [ ! -d "$HOME/whisper.cpp" ]; then
